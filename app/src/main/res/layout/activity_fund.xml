@@ -22,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp">
                 <TextView
-                    android:id="@+id/name_view"
+                    android:id="@+id/invoice_name_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
@@ -42,7 +42,7 @@
                     tools:ignore="RelativeOverlap" />
             </RelativeLayout>
             <TextView
-                android:id="@+id/address_view"
+                android:id="@+id/invoice_address_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black_400"
@@ -72,7 +72,7 @@
                         android:textColor="@color/gray_800"
                         android:textSize="12sp"/>
                     <TextView
-                        android:id="@+id/value_view"
+                        android:id="@+id/invoice_value_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/allerta_stencil"
@@ -105,7 +105,7 @@
                             android:text="@string/id1"
                             android:textSize="12sp" />
                         <TextView
-                            android:id="@+id/id1_view"
+                            android:id="@+id/invoice_id1_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="8dp"
@@ -130,7 +130,7 @@
                             android:text="@string/id2"
                             android:textSize="12sp" />
                         <TextView
-                            android:id="@+id/id2_view"
+                            android:id="@+id/invoice_id2_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="8dp"
@@ -156,14 +156,14 @@
                     android:layout_height="wrap_content"
                     android:text="@string/completion_date"/>
                 <TextView
-                    android:id="@+id/date_view"
+                    android:id="@+id/invoice_date_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/black_400" />
             </LinearLayout>
         </FrameLayout>
         <LinearLayout
-            android:id="@+id/payment_view"
+            android:id="@+id/fund_payment_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
@@ -182,7 +182,7 @@
                 android:paddingBottom="20dp">
 
                 <TextView
-                    android:id="@+id/funded_payment_view"
+                    android:id="@+id/fund_payment_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/allerta_stencil"
@@ -270,7 +270,7 @@
         android:paddingLeft="4dp"
         android:paddingRight="4dp">
         <Button
-            android:id="@+id/call_client_button"
+            android:id="@+id/call_phone_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/call_client"

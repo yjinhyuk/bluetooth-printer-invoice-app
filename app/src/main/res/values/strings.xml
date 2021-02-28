@@ -15,4 +15,8 @@
     <string name="call_client">CAll Client</string>
     <string name="fund_payment">Fund Payment</string>
     <string name="check_out">Check Out</string>
+    <string name="phone_numbers">Phone Numbers</string>
+    <string name="fund_amount">Fund Amount</string>
+    <string name="type_amount_to_pay">Type Amount to Pay</string>
+    <string name="pay">Pay</string>
 </resources>
