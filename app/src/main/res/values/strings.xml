@@ -19,4 +19,12 @@
     <string name="fund_amount">Fund Amount</string>
     <string name="type_amount_to_pay">Type Amount to Pay</string>
     <string name="pay">Pay</string>
+
+    <string name="preference_file_key">com.example.bluetoothprinterinvoiceapp.setting.file</string>
+    <string name="preference_username_key">com.ecare.printer.settings.username</string>
+    <string name="preference_company_key">com.ecare.printer.settings.company</string>
+    <string name="preference_receipt_series_key">com.ecare.printer.settings.receipt_series</string>
+    <string name="preference_receipt_number_key">com.ecare.printer.settings.receipt_number</string>
+    <string name="preference_transmit_key">com.ecare.printer.settings.transmit</string>
+    <string name="preference_server_url_key">com.ecare.printer.settings.server_url</string>
 </resources>
