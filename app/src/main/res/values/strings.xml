@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BluetoothPrinterInvoiceApp</string>
+    <string name="bizarnet">Bizarnet</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="transfer_data">Transfer Data</string>
+    <string name="settings">Settings</string>
+</resources>
