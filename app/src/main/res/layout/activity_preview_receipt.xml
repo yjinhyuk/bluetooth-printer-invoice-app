@@ -29,7 +29,9 @@
                     android:fontFamily="sans-serif"
                     android:textSize="12sp"
                     android:textColor="@color/black_400"
-                    android:padding="4dp" />
+                    android:padding="4dp"
+                    android:maxLines="4"
+                    android:ellipsize="end"/>
             </LinearLayout>
             <Space
                 android:layout_width="0dp"

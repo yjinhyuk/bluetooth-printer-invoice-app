@@ -27,7 +27,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         settingButton.setOnClickListener(v -> {
-//            startActivity(new Intent(HomeActivity.this, SettingActivity.class));
+            startActivity(new Intent(HomeActivity.this, SettingActivity.class));
         });
 
         transferButton.setOnClickListener(v -> {
