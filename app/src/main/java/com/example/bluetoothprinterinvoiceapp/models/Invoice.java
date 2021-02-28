@@ -13,6 +13,7 @@ public class Invoice implements Serializable {
     public String invoiceNumber;
     public String invoiceValue;
     public String invoiceDate;
+    public Invoice(){}
 
     public Invoice(String _name, String _address1, String _address2, String _id1, String _id2, List<String> _phoneNumbers, String _invoiceNumber, String _invoiceValue, String _date){
         invoiceName = _name;
@@ -69,7 +70,7 @@ public class Invoice implements Serializable {
         return invoiceDate;
     }
 
-    public void setDate(String date) {
+    public void setInvoiceDate(String date) {
         this.invoiceDate = date;
     }
 
