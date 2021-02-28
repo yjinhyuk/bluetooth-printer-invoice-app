@@ -23,7 +23,7 @@ public class HomeActivity extends AppCompatActivity {
         settingButton = findViewById(R.id.setting_button);
 
         scanButton.setOnClickListener(v -> {
-//            startActivity(new Intent(HomeActivity.this, ScanActivity.class));
+            startActivity(new Intent(HomeActivity.this, ScanActivity.class));
         });
 
         settingButton.setOnClickListener(v -> {
