@@ -1,8 +1,9 @@
 package com.example.bluetoothprinterinvoiceapp.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
-import android.Manifest;
+
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,47 +11,45 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
+
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.bluetoothprinterinvoiceapp.R;
+import com.example.bluetoothprinterinvoiceapp.database.ReceiptDatabase;
+import com.example.bluetoothprinterinvoiceapp.database.dao.ReceiptDao;
+import com.example.bluetoothprinterinvoiceapp.database.entities.Receipt;
 import com.example.bluetoothprinterinvoiceapp.models.Invoice;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import com.intandif.viewtoimageorpdf.ActionListeners;
 import com.intandif.viewtoimageorpdf.ViewToImage;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class PreviewReceiptActivity extends AppCompatActivity {
 
@@ -65,16 +64,14 @@ public class PreviewReceiptActivity extends AppCompatActivity {
 
     TextView companyInfoView;
     TextView receiptIdView;
+
     TextView customerNameView;
     TextView addressView;
-    TextView customerPrivateValueView;
-    TextView customerPrivateTypeView;
-    TextView netRegionView;
     TextView receiptValueView;
-    TextView representedValueView;
-    TextView usernameView;
+    TextView receiptPrivateInfoView;
     TextView dateView;
     TextView writeDetailsView;
+    TextView usernameView;
 
     Button printButton;
 
@@ -91,7 +88,8 @@ public class PreviewReceiptActivity extends AppCompatActivity {
     String writeDetails;
     String isCancel;
 
-    OkHttpClient okHttpClient;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,9 +103,14 @@ public class PreviewReceiptActivity extends AppCompatActivity {
 
         printButton.setOnClickListener(v -> {
            // Print Button...
-            LinearLayout printLayout = findViewById(R.id.print_layout);
-            printDataViaBluetoothPrinter(printLayout);
-            transferDataToServer();
+            View printView = findViewById(R.id.print_layout);
+            printDataViaBluetoothPrinter(printView);
+            try {
+                transferDataToServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         });
     }
 
@@ -117,72 +120,56 @@ public class PreviewReceiptActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    private void transferDataToServer() {
+    private void transferDataToServer() throws IOException {
         if(isNetworkAvailable()){
-            MediaType MEDIA_TYPE = MediaType.parse("application/json");
-            JSONObject postData = new JSONObject();
-            try {
-                postData.put("NUMAR_FACTURA", scannedInvoice.getInvoiceNumber());
-                postData.put("SERIE_CHITANTA", receiptSeries);
-                postData.put("NUMAR_CHITANTA", receiptNumber);
-                postData.put("VALOARE_PLATA", Double.toString(Double.parseDouble(fundedPayment)*100));
-                postData.put("DATA_PLATA", getCurrentDate());
-                postData.put("NUME_USER", scannedInvoice.getInvoiceName());
-                postData.put("IS_CANCEL", isCancel);
-                postData.put("CHEIE_TRANSMISIE", transmissionKey);
-                postData.put("COMENTARIU", writeDetails);
-            } catch(JSONException e){
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
 
-            RequestBody body = RequestBody.create(MEDIA_TYPE, postData.toString());
+//            okHttpClient = new OkHttpClient();
+//            Log.e("iscancel", isCancel);
+//
+//            RequestBody formBody = new FormBody.Builder()
+//                    .add("NUMAR_FACTURA", scannedInvoice.getInvoiceNumber())
+//                    .add("SERIE_CHITANTA", receiptSeries)
+//                    .add("NUMAR_CHITANTA", receiptNumber)
+//                    .add("VALOARE_PLATA", Double.toString(Double.parseDouble(fundedPayment)*100))
+//                    .add("DATA_PLATA", getCurrentDate())
+//                    .add("NUME_USER", scannedInvoice.getInvoiceName())
+//                    .add("IS_CANCEL", isCancel)
+//                    .add("CHEIE_TRANSMISIE", transmissionKey)
+//                    .add("COMENTARIU", writeDetails)
+//                    .build();
+//            Request request = new Request.Builder().url("http://ecare.bizarnet.ro/staging.asp").post(formBody).build();
+//            Response response = okHttpClient.newCall(request).execute();
+//            if (!response.isSuccessful())
+//                throw new IOException("Unexpected code " + response);
+//            System.out.println(response.body().string());
 
-            Request request = new Request.Builder()
-                    .url("http://ecare.bizarnet.ro/staging.asp")
-                    .post(body)
-                    .header("Accept", "application/json")
-                    .header("Content-Type", "application/json")
-                    .build();
-            okHttpClient = new OkHttpClient();
 
-            okHttpClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    String mMessage = e.getMessage().toString();
-                    Log.w("failure Response", mMessage);
-                    //call.cancel();
-                }
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-
-                    String mMessage = response.body().string();
-                    Log.e("success Response", mMessage);
-                }
-            });
         } else {
             // Store Data to Local Database //
             // Create Database in local //
+            ReceiptDatabase receiptDatabase = Room.databaseBuilder(getApplicationContext(), ReceiptDatabase.class, "receipts").build();
+            ReceiptDao receiptDao = receiptDatabase.receiptDao();
 
+            Receipt receipt = new Receipt();
+            receipt.setNUMAR_FACTURA(scannedInvoice.getInvoiceNumber());
+            receipt.setSERIE_CHITANTA(receiptSeries);
+            receipt.setNUMAR_CHITANTA(receiptNumber);
+            receipt.setVALOARE_PLATA(fundedPayment);
+            receipt.setDATA_PLATA(getCurrentDate());
+            receipt.setNUME_USER(username);
+            receipt.setCHEIE_TRANSMISIE(transmissionKey);
+            receipt.setIS_CANCEL(isCancel);
+            receipt.setCOMENTARIU(writeDetails);
+
+            receiptDao.insert(receipt);
         }
     }
 
 
 
-    private void printDataViaBluetoothPrinter(LinearLayout printLayout) {
-        boolean isPermitted = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                isPermitted= true;
-            }
-        }
+    private void printDataViaBluetoothPrinter(View printView) {
 
-        if(!isPermitted){
-            Toast.makeText(PreviewReceiptActivity.this, "No Permission Granted" , Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        new ViewToImage(PreviewReceiptActivity.this, printLayout, new ActionListeners() {
+        new ViewToImage(PreviewReceiptActivity.this, printView, new ActionListeners() {
             @Override
             public void convertedWithSuccess(Bitmap bitmap, String filePath) {
                 Toast.makeText(PreviewReceiptActivity.this, "" + filePath, Toast.LENGTH_SHORT).show();
@@ -191,13 +178,9 @@ public class PreviewReceiptActivity extends AppCompatActivity {
 
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                try {
-                    findBlueToothDevice();
-                    openBlueToothDevice();
-                    sendData(byteArrayOutputStream.toByteArray());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                findBlueToothDevice();
+                openBlueToothDevice();
+                sendData(byteArrayOutputStream.toByteArray());
                 closeBlueToothDevice();
             }
             @Override
@@ -213,7 +196,7 @@ public class PreviewReceiptActivity extends AppCompatActivity {
             if(bluetoothAdapter == null) {
                 Toast.makeText(getApplicationContext(), "No Bluetooth Adapter Available", Toast.LENGTH_LONG).show();
             }
-            if(!bluetoothAdapter.isEnabled()){
+            if(!Objects.requireNonNull(bluetoothAdapter).isEnabled()){
                 Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBluetooth, 0);
             }
@@ -259,7 +242,7 @@ public class PreviewReceiptActivity extends AppCompatActivity {
         }
     }
 
-    public void sendData(byte[] bytes) throws IOException{
+    public void sendData(byte[] bytes) {
         Log.d("aaa", "bbb");
         try{
             outputStream.write(bytes);
@@ -277,43 +260,40 @@ public class PreviewReceiptActivity extends AppCompatActivity {
             stopWorker = false;
             readBufferPosition = 0;
             byte[] readBuffer = new byte[1024];
-            workerThread = new Thread(new Runnable() {
-                public void run() {
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                        try {
-                            int bytesAvailable = inputStream.available();
-                            if (bytesAvailable > 0) {
-                                byte[] packetBytes = new byte[bytesAvailable];
-                                inputStream.read(packetBytes);
-                                for (int i = 0; i < bytesAvailable; i++) {
-                                    byte b = packetBytes[i];
-                                    if (b == delimiter) {
-                                        byte[] encodedBytes = new byte[readBufferPosition];
-                                        System.arraycopy(
-                                                readBuffer, 0,
-                                                encodedBytes, 0,
-                                                encodedBytes.length
-                                        );
-                                        // specify US-ASCII encoding
-                                        final String data = new String(encodedBytes, "US-ASCII");
-                                        readBufferPosition = 0;
-
-                                        // tell the user data were sent to bluetooth printer device
-                                        handler.post(new Runnable() {
-                                            public void run() {
-                                                Toast.makeText(getApplicationContext(), data, Toast.LENGTH_LONG).show();
-                                            }
-                                        });
-
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
+            workerThread = new Thread(() -> {
+                while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+                    try {
+                        int bytesAvailable = inputStream.available();
+                        if (bytesAvailable > 0) {
+                            byte[] packetBytes = new byte[bytesAvailable];
+                            inputStream.read(packetBytes);
+                            for (int i = 0; i < bytesAvailable; i++) {
+                                byte b = packetBytes[i];
+                                if (b == delimiter) {
+                                    byte[] encodedBytes = new byte[readBufferPosition];
+                                    System.arraycopy(
+                                            readBuffer, 0,
+                                            encodedBytes, 0,
+                                            encodedBytes.length
+                                    );
+                                    // specify US-ASCII encoding
+                                    String data = "";
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                                        data = new String(encodedBytes, StandardCharsets.US_ASCII);
                                     }
+                                    readBufferPosition = 0;
+
+                                    /* tell the user data were sent to bluetooth printer device */
+                                    String finalData = data;
+                                    handler.post(() -> Toast.makeText(getApplicationContext(), finalData, Toast.LENGTH_LONG).show());
+
+                                } else {
+                                    readBuffer[readBufferPosition++] = b;
                                 }
                             }
-
-                        } catch (IOException ex) {
-                            stopWorker = true;
                         }
+                    } catch (IOException ex) {
+                        stopWorker = true;
                     }
                 }
             });
@@ -323,50 +303,18 @@ public class PreviewReceiptActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private void setValues() {
-        if (!username.equals("") && !companyInfo.equals("") && !receiptSeries.equals("") && !receiptNumber.equals("") && !transmissionKey.equals("") && !serverURL.equals("")){
-            companyInfoView.setText(companyInfo);
-            receiptIdView.setText(receiptSeries + " / " + receiptNumber);
-            customerNameView.setText(scannedInvoice.getInvoiceName());
-            addressView.setText(scannedInvoice.getInvoiceAddress1() + " , " + scannedInvoice.getInvoiceAddress2());
-            customerPrivateValueView.setText(scannedInvoice.getInvoiceId1());
-            receiptValueView.setText(fundedPayment);
 
-            String representedStr;
-            if(Double.parseDouble(fundedPayment) < Double.parseDouble(scannedInvoice.getInvoiceValue())){
-                representedStr = "C/V factura " + scannedInvoice.getInvoiceNumber() + " din data " + scannedInvoice.getInvoiceDate();
-            } else {
-                representedStr = "plata partiala factura " + scannedInvoice.getInvoiceNumber() + "din data" + scannedInvoice.getInvoiceDate();
-            }
-            representedValueView.setText(representedStr);
-
-            usernameView.setText(username);
-            dateView.setText("Tiparit la " + getCurrentDate() + " ora " + getCurrentTime());
-            writeDetailsView.setText(writeDetails);
-        } else {
-            Toast.makeText(this, "Please Set the Setting", Toast.LENGTH_LONG).show();
-            startActivity(new Intent(PreviewReceiptActivity.this, SettingActivity.class));
-            finish();
-        }
-
-
-    }
 
     private void initComponents() {
         companyInfoView = findViewById(R.id.company_info_view);
         receiptIdView = findViewById(R.id.receipt_id_view);
         customerNameView = findViewById(R.id.customer_name_view);
         addressView = findViewById(R.id.customer_address_view);
-        customerPrivateTypeView = findViewById(R.id.customer_private_type_view);
-        customerPrivateValueView = findViewById(R.id.customer_private_value_view);
-        netRegionView = findViewById(R.id.net_region_view);
+        receiptPrivateInfoView = findViewById(R.id.receipt_private_info_view);
         receiptValueView = findViewById(R.id.receipt_value_view);
-        representedValueView = findViewById(R.id.receipt_represent_view);
         writeDetailsView = findViewById(R.id.receipt_details_view);
         usernameView = findViewById(R.id.user_name_view);
         dateView = findViewById(R.id.print_date_view);
-
         printButton = findViewById(R.id.print_button);
     }
 
@@ -384,7 +332,44 @@ public class PreviewReceiptActivity extends AppCompatActivity {
         scannedInvoice = (Invoice) getIntent().getSerializableExtra("scanned_invoice");
         fundedPayment = getIntent().getStringExtra("funded_payment");
         writeDetails = getIntent().getStringExtra("receipt_details_info");
-        isCancel = getIntent().getStringExtra("isCancelable");
+        isCancel = getIntent().getStringExtra("isCancel");
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void setValues() {
+        if (!username.equals("") && !companyInfo.equals("") && !receiptSeries.equals("") && !receiptNumber.equals("") && !transmissionKey.equals("") && !serverURL.equals("")){
+
+            companyInfoView.setText(companyInfo);
+            receiptIdView.setText("CHITANTA" + receiptSeries + " " + receiptNumber + " / " + getCurrentDate());
+
+            String customerNameStr = "Am primit de la " + "<b>"+scannedInvoice.getInvoiceName()+"</b>";
+            customerNameView.setText(Html.fromHtml(customerNameStr));
+
+            String addressStr = "Adresa: "+"<b>"+scannedInvoice.getInvoiceAddress1()+ ", "+scannedInvoice.getInvoiceAddress2();
+            addressView.setText(Html.fromHtml(addressStr));
+
+            String receiptPrivateStr = "CIF: " + "<b>" + scannedInvoice.getInvoiceId2()+"</b>";
+            receiptPrivateInfoView.setText(Html.fromHtml(receiptPrivateStr));
+
+
+
+            String representedStr;
+            if(Double.parseDouble(fundedPayment) > Double.parseDouble(scannedInvoice.getInvoiceValue())){
+                representedStr = "C/V factura " + scannedInvoice.getInvoiceNumber() + " / " + scannedInvoice.getInvoiceDate();
+            } else {
+                representedStr = "plata partiala factura " + scannedInvoice.getInvoiceNumber() + " / " + scannedInvoice.getInvoiceDate();
+            }
+            String receiptValueStr = "suma de "+"<b>"+fundedPayment+"</b>"+" lei, reprezentand "+"<b>"+representedStr+"</b>";
+            receiptValueView.setText(Html.fromHtml(receiptValueStr));
+
+            usernameView.setText(username);
+            dateView.setText("Tiparit la " + getCurrentDate() + " ora " + getCurrentTime());
+            writeDetailsView.setText(writeDetails);
+        } else {
+            Toast.makeText(this, "Please Set the Setting", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(PreviewReceiptActivity.this, SettingActivity.class));
+            finish();
+        }
     }
 
     public String getCurrentDate(){
