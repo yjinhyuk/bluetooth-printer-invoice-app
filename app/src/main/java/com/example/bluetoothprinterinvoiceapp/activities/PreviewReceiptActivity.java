@@ -147,7 +147,7 @@ public class PreviewReceiptActivity extends AppCompatActivity {
                     .build();
             MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
             String content;
-            content = "NUMAR_FACTURA="+scannedInvoice.getInvoiceNumber()+"&SERIE_CHITANTA="+receiptSeries+"&NUMAR_CHITANTA="+receiptNumber+"&VALOARE_PLATA="+Double.toString(Double.parseDouble(fundedPayment)*100)+"&DATA_PLATA="+getCurrentDate()+"&NUME_USER="+username+"&CHEIE_TRANSMISIE="+transmissionKey+"&IS_CANCEL="+isCancel+"&COMENTARIU="+writeDetails;
+            content = "NUMAR_FACTURA="+scannedInvoice.getInvoiceNumber()+"&SERIE_CHITANTA="+receiptSeries+"&NUMAR_CHITANTA="+receiptNumber+"&VALOARE_PLATA="+ (int) (Double.parseDouble(fundedPayment) * 100) +"&DATA_PLATA="+getCurrentDate()+"&NUME_USER="+username+"&CHEIE_TRANSMISIE="+transmissionKey+"&IS_CANCEL="+isCancel+"&COMENTARIU="+writeDetails;
             RequestBody body = RequestBody.create(mediaType, content);
             Request request = new Request.Builder()
                     .url("http://ecare.bizarnet.ro/staging.asp")

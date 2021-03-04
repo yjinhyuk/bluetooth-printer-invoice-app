@@ -100,7 +100,7 @@ public class ScanActivity extends AppCompatActivity {
                     qrStatusView.post(() -> {
                         // Read QR Code By String...
                         String qrCodeString = barcodeSparseArray.valueAt(0).displayValue;
-                        Toast.makeText(getApplicationContext(), "QR Code Scanned", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "QR Code is not scanned...", Toast.LENGTH_SHORT).show();
 
                         // Converting QR code String into Invoice class model...
                         try{
