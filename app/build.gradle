@@ -39,6 +39,7 @@ dependencies {
 
     // Added Dependencies...
     implementation 'com.google.android.gms:play-services-vision:20.1.3'
+
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
     implementation 'com.github.intsab:LayoutToImage:1.0'
 
@@ -54,6 +55,7 @@ dependencies {
 
     // optional - Test helpers
     testImplementation "androidx.room:room-testing:$room_version"
+
 
 
 }

@@ -18,6 +18,7 @@ import android.net.NetworkInfo;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
@@ -36,6 +37,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -49,6 +52,15 @@ import java.util.UUID;
 
 import com.intandif.viewtoimageorpdf.ActionListeners;
 import com.intandif.viewtoimageorpdf.ViewToImage;
+
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 
 public class PreviewReceiptActivity extends AppCompatActivity {
@@ -88,8 +100,8 @@ public class PreviewReceiptActivity extends AppCompatActivity {
     String writeDetails;
     String isCancel;
 
-
-
+    public static final MediaType FORM = MediaType.parse("multipart/form-data");
+    private final OkHttpClient client = new OkHttpClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +118,16 @@ public class PreviewReceiptActivity extends AppCompatActivity {
             View printView = findViewById(R.id.print_layout);
             printDataViaBluetoothPrinter(printView);
             try {
+                int SDK_INT = android.os.Build.VERSION.SDK_INT;
+                if (SDK_INT > 8)
+                {
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                            .permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                }
                 transferDataToServer();
+                startActivity(new Intent(PreviewReceiptActivity.this, HomeActivity.class));
+                finish();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -122,27 +143,19 @@ public class PreviewReceiptActivity extends AppCompatActivity {
 
     private void transferDataToServer() throws IOException {
         if(isNetworkAvailable()){
-
-//            okHttpClient = new OkHttpClient();
-//            Log.e("iscancel", isCancel);
-//
-//            RequestBody formBody = new FormBody.Builder()
-//                    .add("NUMAR_FACTURA", scannedInvoice.getInvoiceNumber())
-//                    .add("SERIE_CHITANTA", receiptSeries)
-//                    .add("NUMAR_CHITANTA", receiptNumber)
-//                    .add("VALOARE_PLATA", Double.toString(Double.parseDouble(fundedPayment)*100))
-//                    .add("DATA_PLATA", getCurrentDate())
-//                    .add("NUME_USER", scannedInvoice.getInvoiceName())
-//                    .add("IS_CANCEL", isCancel)
-//                    .add("CHEIE_TRANSMISIE", transmissionKey)
-//                    .add("COMENTARIU", writeDetails)
-//                    .build();
-//            Request request = new Request.Builder().url("http://ecare.bizarnet.ro/staging.asp").post(formBody).build();
-//            Response response = okHttpClient.newCall(request).execute();
-//            if (!response.isSuccessful())
-//                throw new IOException("Unexpected code " + response);
-//            System.out.println(response.body().string());
-
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+            String content;
+            content = "NUMAR_FACTURA="+scannedInvoice.getInvoiceNumber()+"&SERIE_CHITANTA="+receiptSeries+"&NUMAR_CHITANTA="+receiptNumber+"&VALOARE_PLATA="+Double.toString(Double.parseDouble(fundedPayment)*100)+"&DATA_PLATA="+getCurrentDate()+"&NUME_USER="+username+"&CHEIE_TRANSMISIE="+transmissionKey+"&IS_CANCEL="+isCancel+"&COMENTARIU="+writeDetails;
+            RequestBody body = RequestBody.create(mediaType, content);
+            Request request = new Request.Builder()
+                    .url("http://ecare.bizarnet.ro/staging.asp")
+                    .method("POST", body)
+                    .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                    .addHeader("Cookie", "ASPSESSIONIDQSTRRADB=PMPHOBFDMFPLABPKDIHNDJEC")
+                    .build();
+            Response response = client.newCall(request).execute();
 
         } else {
             // Store Data to Local Database //
